@@ -1,24 +1,74 @@
-import Profile from './components/profile/Profile';
-import FriendList from './components/friends_list/FriendList';
-import TransactionHistory from './components/transaction/transactionHistory';
-import userData from './userData.json';
-import friends from './FriendList.json';
-import transactions from './transactions.json';
+import Options from "./components/Options/options";
+import Description from "./components/Description/description";
+import Feedback from "./components/Feedback/feedback";
+import Notification from "./components/Notification/notification"
+import { useState } from "react";
+import { useEffect } from "react";
+
+
 
 const App = () => {
- return (
-     <>
-     <Profile
-         name={userData.username}
-         tag={userData.tag}
-         location={userData.location}
-          image={userData.avatar}
-          stats={userData.stats}
-     />
-     <FriendList friends={friends} />
-     <TransactionHistory items={transactions} />
-    </>
-    );
+     const [feedback, setFeedback] = useState({
+    good: 0,
+    neutral: 0,
+    bad: 0,
+     });
+    
+     useEffect(() => {
+    // Перевіряємо, чи є дані в локальному сховищі
+    const storedFeedback = localStorage.getItem("feedback");
+    if (storedFeedback) {
+      setFeedback(JSON.parse(storedFeedback));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Зберігаємо дані в локальному сховищі при зміні стану
+    localStorage.setItem("feedback", JSON.stringify(feedback));
+  }, [feedback]);
+
+  const updateFeedback = (feedbackType) => {
+    setFeedback((prevFeedback) => ({
+      ...prevFeedback,
+      [feedbackType]: prevFeedback[feedbackType] + 1,
+    }));
+  };
+
+  const totalFeedback = feedback.good + feedback.neutral + feedback.bad;
+    const positiveFeedback = totalFeedback > 0
+        ? Math.round((feedback.good / totalFeedback) * 100)
+        : 0;
+
+
+  const resetFeedback = () => {
+    setFeedback({
+      good: 0,
+      neutral: 0,
+      bad: 0,
+    });
+  };
+
+  return (
+    <div className="app">
+      <Description />
+      <Options
+        updateFeedback={updateFeedback}
+        totalFeedback={totalFeedback}
+        resetFeedback={resetFeedback}
+      />
+      {totalFeedback > 0 ? (
+        <Feedback
+          feedback={feedback}
+          totalFeedback={totalFeedback}
+          positiveFeedback={positiveFeedback}
+        />
+      ) : (
+        <Notification message="No feedback yet." />
+      )}
+    </div>
+  );
 };
 
 export default App;
+    
+
